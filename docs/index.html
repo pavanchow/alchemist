@@ -2,11 +2,764 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>alchemist</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alchemist: a compiler in Rust with a bundled bytecode VM</title>
+<meta name="description" content="Alchemist is a compiler in Rust that lowers a small language through a lexer, parser, and code generator into stack bytecode, then runs it on a bundled virtual machine. Try the real pipeline live in your browser.">
+<meta name="author" content="Pavan Nallamothu">
+<link rel="canonical" href="https://pavanchow.github.io/alchemist/">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Alchemist: a compiler in Rust with a bundled bytecode VM">
+<meta property="og:description" content="A real compiler pipeline you can read: lexer, parser, AST, a code generator that emits stack bytecode, and a small VM that executes it. Try it live.">
+<meta property="og:url" content="https://pavanchow.github.io/alchemist/">
+<meta property="og:site_name" content="Alchemist">
+<meta name="twitter:card" content="summary">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Alchemist",
+  "description": "Alchemist is a compiler in Rust that lowers a small language through a lexer, parser, and code generator into stack bytecode, then runs it on a bundled virtual machine.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Cross-platform",
+  "author": { "@type": "Person", "name": "Pavan Nallamothu" },
+  "url": "https://pavanchow.github.io/alchemist/",
+  "codeRepository": "https://github.com/pavanchow/alchemist",
+  "programmingLanguage": "Rust"
+}
+</script>
+
+<style>
+  :root{
+    --accent:#b45309;--accent-soft:#fdf2e3;
+    --ink:#1a1712;--muted:#6e6a62;--faint:#9c968a;
+    --line:#eae5db;--panel:#f8f5ee;--panel2:#fbfaf6;
+    --mono:ui-monospace,SFMono-Regular,Menlo,"SF Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:#fff;color:var(--ink);
+    font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 28px}
+  a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+
+  nav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)}
+  nav .row{display:flex;justify-content:space-between;align-items:center;height:56px;max-width:1040px;margin:0 auto;padding:0 28px}
+  nav .brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:650;letter-spacing:-.01em}
+  nav .brand .gem{width:16px;height:16px;transform:rotate(45deg);border-radius:3px;background:linear-gradient(135deg,#e0a45f,#b45309)}
+  nav .links{display:flex;gap:26px;align-items:center}
+  nav .links a{color:var(--ink);font-size:14.5px}
+  @media(max-width:640px){nav .links a:not(.gh){display:none}}
+
+  .hero{padding:70px 0 30px;text-align:center}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+  h1{font-size:clamp(40px,7vw,68px);line-height:1.05;letter-spacing:-.035em;font-weight:680;margin:18px 0 0}
+  .hero p.sub{max-width:640px;margin:24px auto 0;font-size:clamp(17px,2.1vw,21px);color:var(--muted)}
+  .cta{display:flex;gap:14px;justify-content:center;margin-top:38px;flex-wrap:wrap}
+  .btn{display:inline-block;padding:12px 24px;border-radius:980px;font-weight:600;font-size:15px}
+  .btn:hover{text-decoration:none}
+  .btn.p{background:var(--ink);color:#fff}
+  .btn.p:hover{background:var(--accent)}
+  .btn.s{border:1px solid var(--line);color:var(--ink)}
+  .btn.s:hover{border-color:var(--ink)}
+
+  .stage{max-width:960px;margin:44px auto 0;padding:0 28px}
+  .card{position:relative;background:linear-gradient(180deg,#fffdf9,#faf6ee);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 1px 0 #fff inset,0 18px 50px -30px rgba(90,60,20,.28);padding:26px}
+
+  .demo .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .demo textarea{width:100%;min-height:210px;resize:vertical;background:var(--panel2);
+    border:1px solid var(--line);border-radius:12px;padding:16px 18px;font-family:var(--mono);font-size:13.5px;
+    color:var(--ink);line-height:1.55;tab-size:4}
+  .demo button{cursor:pointer;font:600 14px/1 var(--mono);padding:11px 20px;border-radius:10px;border:1px solid var(--ink);background:var(--ink);color:#fff}
+  .demo button:hover{background:var(--accent);border-color:var(--accent)}
+  .demo .status{font-family:var(--mono);font-size:12.5px;color:var(--faint)}
+  .panes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+  @media(max-width:720px){.panes{grid-template-columns:1fr}}
+  .pane h4{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  .pane pre{background:#191510;color:#f2ece1;border-radius:12px;padding:16px 18px;font-family:var(--mono);font-size:12.5px;
+    overflow:auto;max-height:320px;min-height:120px;white-space:pre-wrap;word-break:break-word}
+  .pane pre.err{color:#f3b89c}
+
+  section{padding:92px 0;border-top:1px solid var(--line)}
+  h2{font-size:clamp(27px,4.2vw,42px);line-height:1.12;letter-spacing:-.025em;font-weight:660;text-align:center;max-width:760px;margin:0 auto}
+  .lead{max-width:640px;margin:22px auto 0;text-align:center;color:var(--muted);font-size:18px}
+  .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;max-width:1040px;margin:48px auto 0}
+  @media(max-width:900px){.steps{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.steps{grid-template-columns:1fr}}
+  .step{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:22px}
+  .step .n{display:inline-flex;width:26px;height:26px;border-radius:8px;background:var(--accent-soft);color:var(--accent);align-items:center;justify-content:center;font:700 12px var(--mono);margin-bottom:10px}
+  .step h3{font-size:16px;margin-bottom:6px}.step p{color:var(--muted);font-size:14.5px}
+
+  pre.code{background:#15161c;color:#ececf4;border-radius:14px;padding:20px 22px;font-family:var(--mono);font-size:13.5px;overflow-x:auto;max-width:640px;margin:40px auto 0}
+  pre.code .c{color:#8a8d9a}
+
+  footer{padding:64px 0;border-top:1px solid var(--line);text-align:center;color:var(--muted)}
+  footer .name{color:var(--ink);font-weight:600}
+</style>
 </head>
 <body>
-<h1>alchemist</h1>
-<p>Site coming soon.</p>
-<p><a href="https://github.com/pavanchow/alchemist">View repository</a></p>
+  <nav><div class="row">
+    <div class="brand"><span class="gem"></span>Alchemist</div>
+    <div class="links">
+      <a href="#demo">Demo</a><a href="#how">How it works</a><a href="#source">Source</a>
+      <a class="gh" href="https://github.com/pavanchow/alchemist">GitHub</a>
+    </div>
+  </div></nav>
+
+  <div id="demo" class="hero">
+    <p class="eyebrow">Rust · from scratch · no parser generator</p>
+    <h1>Source becomes instructions,<br>then the instructions run.</h1>
+    <p class="sub">Alchemist is a compiler in Rust for a small language: a hand-written lexer, a recursive-descent parser, a code generator that lowers the AST to stack bytecode, and a bundled virtual machine that executes it. This is the real pipeline, ported to JavaScript, running below.</p>
+    <div class="cta">
+      <a class="btn p" href="https://github.com/pavanchow/alchemist">Get the source</a>
+      <a class="btn s" href="#how">See how it works</a>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="card demo">
+      <div class="bar">
+        <button id="runBtn" type="button">Compile and run</button>
+        <span class="status" id="status">ready</span>
+      </div>
+      <textarea id="src" spellcheck="false"></textarea>
+      <div class="panes">
+        <div class="pane">
+          <h4>Program output</h4>
+          <pre id="outputPane"></pre>
+        </div>
+        <div class="pane">
+          <h4>Bytecode disassembly</h4>
+          <pre id="bytecodePane"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="how">
+    <h2>Five stages, source to result.</h2>
+    <p class="lead">Every stage is written by hand, no parser-generator or compiler crate anywhere in the pipeline.</p>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3>Lex</h3><p>A hand-written scanner turns source text into a flat token stream, tracking line and column for every error.</p></div>
+      <div class="step"><div class="n">2</div><h3>Parse</h3><p>Recursive descent with precedence climbing builds an AST, guarded against runaway nesting so a bad file cannot overflow the stack.</p></div>
+      <div class="step"><div class="n">3</div><h3>Codegen</h3><p>The AST is walked once and lowered into a compact stack bytecode, with variables resolved to numbered local slots.</p></div>
+      <div class="step"><div class="n">4</div><h3>Bytecode</h3><p>A small instruction set: pushes, arithmetic, comparisons, locals, jumps, and calls, readable in a disassembly.</p></div>
+      <div class="step"><div class="n">5</div><h3>VM</h3><p>A stack machine with call frames executes the bytecode directly, catching underflow and division by zero cleanly.</p></div>
+    </div>
+  </section>
+
+  <section id="source">
+    <h2>Read the pipeline, not just the output.</h2>
+    <p class="lead">Every command below runs the same four stages you just watched in the browser.</p>
+    <pre class="code"><span class="c"># compile and run a program</span>
+alchemist run factorial.al
+
+<span class="c"># emit bytecode to a file</span>
+alchemist build factorial.al -o factorial.abc
+
+<span class="c"># show the instructions inside a bytecode file</span>
+alchemist disasm factorial.abc</pre>
+  </section>
+
+  <noscript>
+    <div class="wrap" style="padding:40px 28px;color:#6a6d78">
+      Alchemist is a compiler in Rust that lowers a small language through a hand-written lexer, a recursive-descent parser, and a code generator into a compact stack bytecode, then executes that bytecode on a bundled virtual machine. The language supports integers, booleans, and strings, let bindings, arithmetic and comparison and boolean operators, if and else, while loops, and functions with parameters, return, and recursion. Source at github.com/pavanchow/alchemist. By Pavan Nallamothu.
+    </div>
+  </noscript>
+
+  <footer>
+    <p>A compiler pipeline you can read end to end.</p>
+    <p style="margin-top:12px"><a href="https://github.com/pavanchow/alchemist">github.com/pavanchow/alchemist</a></p>
+    <p style="margin-top:12px">By <span class="name">Pavan Nallamothu</span>.</p>
+  </footer>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- lexer.rs, ported ----------
+  var KEYWORDS = {
+    "let":"LET","fn":"FN","if":"IF","else":"ELSE","while":"WHILE",
+    "return":"RETURN","print":"PRINT","true":"TRUE","false":"FALSE"
+  };
+
+  function LexError(message, line, col){this.message=message;this.line=line;this.col=col;}
+  LexError.prototype.toString=function(){return "lex error at "+this.line+":"+this.col+": "+this.message;};
+
+  function lex(src){
+    var chars=Array.from(src), i=0, line=1, col=1, out=[];
+    function adv(){ if(i<chars.length && chars[i]==="\n"){line++;col=1;} else {col++;} i++; }
+    while(i<chars.length){
+      var c=chars[i];
+      if(/\s/.test(c)){adv();continue;}
+      if(c==="/" && chars[i+1]==="/"){ while(i<chars.length && chars[i]!=="\n") adv(); continue; }
+      var sl=line, sc=col;
+      if(/[0-9]/.test(c)){
+        var num="";
+        while(i<chars.length && /[0-9]/.test(chars[i])){num+=chars[i];adv();}
+        out.push({type:"INT",value:parseInt(num,10),line:sl,col:sc});
+        continue;
+      }
+      if(/[A-Za-z_]/.test(c)){
+        var id="";
+        while(i<chars.length && /[A-Za-z0-9_]/.test(chars[i])){id+=chars[i];adv();}
+        if(KEYWORDS[id]) out.push({type:KEYWORDS[id],line:sl,col:sc});
+        else out.push({type:"IDENT",value:id,line:sl,col:sc});
+        continue;
+      }
+      if(c==='"'){
+        adv();
+        var s="";
+        for(;;){
+          if(i>=chars.length) throw new LexError("unterminated string literal",sl,sc);
+          var ch=chars[i];
+          if(ch==='"'){adv();break;}
+          if(ch==="\\"){
+            adv();
+            if(i>=chars.length) throw new LexError("unterminated escape sequence",line,col);
+            var esc=chars[i], real={"n":"\n","t":"\t",'"':'"',"\\":"\\"}[esc];
+            if(real===undefined) throw new LexError("unknown escape sequence '\\"+esc+"'",line,col);
+            s+=real; adv(); continue;
+          }
+          s+=ch; adv();
+        }
+        out.push({type:"STR",value:s,line:sl,col:sc});
+        continue;
+      }
+      function two(second,twoType,oneType){
+        adv();
+        if(i<chars.length && chars[i]===second){adv();out.push({type:twoType,line:sl,col:sc});}
+        else out.push({type:oneType,line:sl,col:sc});
+      }
+      switch(c){
+        case "+": adv(); out.push({type:"PLUS",line:sl,col:sc}); break;
+        case "-": adv(); out.push({type:"MINUS",line:sl,col:sc}); break;
+        case "*": adv(); out.push({type:"STAR",line:sl,col:sc}); break;
+        case "/": adv(); out.push({type:"SLASH",line:sl,col:sc}); break;
+        case "%": adv(); out.push({type:"PERCENT",line:sl,col:sc}); break;
+        case "=": two("=","EQ","ASSIGN"); break;
+        case "!": two("=","NOTEQ","BANG"); break;
+        case "<": two("=","LTEQ","LT"); break;
+        case ">": two("=","GTEQ","GT"); break;
+        case "&":
+          adv();
+          if(i<chars.length && chars[i]==="&"){adv();out.push({type:"ANDAND",line:sl,col:sc});}
+          else throw new LexError("unexpected character '&'",sl,sc);
+          break;
+        case "|":
+          adv();
+          if(i<chars.length && chars[i]==="|"){adv();out.push({type:"OROR",line:sl,col:sc});}
+          else throw new LexError("unexpected character '|'",sl,sc);
+          break;
+        case "(": adv(); out.push({type:"LPAREN",line:sl,col:sc}); break;
+        case ")": adv(); out.push({type:"RPAREN",line:sl,col:sc}); break;
+        case "{": adv(); out.push({type:"LBRACE",line:sl,col:sc}); break;
+        case "}": adv(); out.push({type:"RBRACE",line:sl,col:sc}); break;
+        case ",": adv(); out.push({type:"COMMA",line:sl,col:sc}); break;
+        case ";": adv(); out.push({type:"SEMI",line:sl,col:sc}); break;
+        default: throw new LexError("unexpected character '"+c+"'",sl,sc);
+      }
+    }
+    out.push({type:"EOF",line:line,col:col});
+    return out;
+  }
+
+  // ---------- parser.rs, ported ----------
+  var MAX_EXPR_DEPTH=200;
+  function ParseError(message,line,col){this.message=message;this.line=line;this.col=col;}
+  ParseError.prototype.toString=function(){return "parse error at "+this.line+":"+this.col+": "+this.message;};
+
+  function Parser(toks){this.toks=toks;this.pos=0;this.depth=0;}
+  Parser.prototype.peek=function(){return this.toks[this.pos];};
+  Parser.prototype.check=function(t){return this.peek().type===t;};
+  Parser.prototype.advance=function(){var tok=this.toks[this.pos]; if(this.pos<this.toks.length-1) this.pos++; return tok;};
+  Parser.prototype.err=function(msg){var t=this.peek(); return new ParseError(msg,t.line,t.col);};
+  Parser.prototype.expect=function(t){ if(this.check(t)) return this.advance(); throw this.err("expected "+t+", found "+this.peek().type); };
+  Parser.prototype.ident=function(){ var t=this.peek(); if(t.type!=="IDENT") throw this.err("expected identifier, found "+t.type); this.advance(); return t.value; };
+  Parser.prototype.enter=function(){ this.depth++; if(this.depth>MAX_EXPR_DEPTH) throw this.err("expression nesting too deep"); };
+  Parser.prototype.leave=function(){ this.depth--; };
+  Parser.prototype.peekAheadIsAssign=function(){ var t=this.toks[this.pos+1]; return !!t && t.type==="ASSIGN"; };
+
+  Parser.prototype.block=function(){
+    this.expect("LBRACE");
+    var stmts=[];
+    while(!this.check("RBRACE")){
+      if(this.check("EOF")) throw this.err("unterminated block, expected '}'");
+      stmts.push(this.statement());
+    }
+    this.expect("RBRACE");
+    return stmts;
+  };
+
+  Parser.prototype.statement=function(){
+    var t=this.peek();
+    switch(t.type){
+      case "LET": {
+        this.advance();
+        var name=this.ident();
+        this.expect("ASSIGN");
+        var expr=this.expression();
+        this.expect("SEMI");
+        return {kind:"Let",name:name,expr:expr};
+      }
+      case "PRINT": {
+        this.advance();
+        this.expect("LPAREN");
+        var pe=this.expression();
+        this.expect("RPAREN");
+        this.expect("SEMI");
+        return {kind:"Print",expr:pe};
+      }
+      case "IF": {
+        this.advance();
+        this.expect("LPAREN");
+        var cond=this.expression();
+        this.expect("RPAREN");
+        var thenBody=this.block();
+        var elseBody=null;
+        if(this.check("ELSE")){
+          this.advance();
+          if(this.check("IF")) elseBody=[this.statement()];
+          else elseBody=this.block();
+        }
+        return {kind:"If",cond:cond,thenBody:thenBody,elseBody:elseBody};
+      }
+      case "WHILE": {
+        this.advance();
+        this.expect("LPAREN");
+        var wc=this.expression();
+        this.expect("RPAREN");
+        var body=this.block();
+        return {kind:"While",cond:wc,body:body};
+      }
+      case "RETURN": {
+        this.advance();
+        if(this.check("SEMI")){ this.advance(); return {kind:"Return",expr:null}; }
+        var re=this.expression();
+        this.expect("SEMI");
+        return {kind:"Return",expr:re};
+      }
+      case "FN": {
+        this.advance();
+        var fname=this.ident();
+        this.expect("LPAREN");
+        var params=[];
+        if(!this.check("RPAREN")){
+          for(;;){
+            params.push(this.ident());
+            if(this.check("COMMA")) this.advance(); else break;
+          }
+        }
+        this.expect("RPAREN");
+        var fbody=this.block();
+        return {kind:"FnDef",name:fname,params:params,body:fbody};
+      }
+      case "IDENT":
+        if(this.peekAheadIsAssign()){
+          var line=t.line;
+          var aname=this.ident();
+          this.expect("ASSIGN");
+          var aexpr=this.expression();
+          this.expect("SEMI");
+          return {kind:"Assign",name:aname,expr:aexpr,line:line};
+        }
+      // fall through
+      default: {
+        var ee=this.expression();
+        this.expect("SEMI");
+        return {kind:"ExprStmt",expr:ee};
+      }
+    }
+  };
+
+  Parser.prototype.expression=function(){ return this.orExpr(); };
+  Parser.prototype.orExpr=function(){
+    this.enter();
+    var left=this.andExpr();
+    while(this.check("OROR")){ this.advance(); var right=this.andExpr(); left={kind:"Binary",op:"Or",l:left,r:right}; }
+    this.leave(); return left;
+  };
+  Parser.prototype.andExpr=function(){
+    this.enter();
+    var left=this.equality();
+    while(this.check("ANDAND")){ this.advance(); var right=this.equality(); left={kind:"Binary",op:"And",l:left,r:right}; }
+    this.leave(); return left;
+  };
+  Parser.prototype.equality=function(){
+    this.enter();
+    var left=this.comparison();
+    for(;;){
+      var op=null;
+      if(this.check("EQ")) op="Eq"; else if(this.check("NOTEQ")) op="NotEq"; else break;
+      this.advance(); var right=this.comparison(); left={kind:"Binary",op:op,l:left,r:right};
+    }
+    this.leave(); return left;
+  };
+  Parser.prototype.comparison=function(){
+    this.enter();
+    var left=this.term();
+    for(;;){
+      var op=null;
+      if(this.check("LT")) op="Lt"; else if(this.check("GT")) op="Gt";
+      else if(this.check("LTEQ")) op="LtEq"; else if(this.check("GTEQ")) op="GtEq"; else break;
+      this.advance(); var right=this.term(); left={kind:"Binary",op:op,l:left,r:right};
+    }
+    this.leave(); return left;
+  };
+  Parser.prototype.term=function(){
+    this.enter();
+    var left=this.factor();
+    for(;;){
+      var op=null;
+      if(this.check("PLUS")) op="Add"; else if(this.check("MINUS")) op="Sub"; else break;
+      this.advance(); var right=this.factor(); left={kind:"Binary",op:op,l:left,r:right};
+    }
+    this.leave(); return left;
+  };
+  Parser.prototype.factor=function(){
+    this.enter();
+    var left=this.unary();
+    for(;;){
+      var op=null;
+      if(this.check("STAR")) op="Mul"; else if(this.check("SLASH")) op="Div"; else if(this.check("PERCENT")) op="Mod"; else break;
+      this.advance(); var right=this.unary(); left={kind:"Binary",op:op,l:left,r:right};
+    }
+    this.leave(); return left;
+  };
+  Parser.prototype.unary=function(){
+    this.enter();
+    var out;
+    if(this.check("MINUS")){ this.advance(); out={kind:"Unary",op:"Neg",e:this.unary()}; }
+    else if(this.check("BANG")){ this.advance(); out={kind:"Unary",op:"Not",e:this.unary()}; }
+    else out=this.primary();
+    this.leave(); return out;
+  };
+  Parser.prototype.primary=function(){
+    this.enter();
+    var t=this.peek(), out;
+    if(t.type==="INT"){ this.advance(); out={kind:"Int",value:t.value}; }
+    else if(t.type==="TRUE"){ this.advance(); out={kind:"Bool",value:true}; }
+    else if(t.type==="FALSE"){ this.advance(); out={kind:"Bool",value:false}; }
+    else if(t.type==="STR"){ this.advance(); out={kind:"Str",value:t.value}; }
+    else if(t.type==="IDENT"){
+      var line=t.line;
+      this.advance();
+      if(this.check("LPAREN")){
+        this.advance();
+        var args=[];
+        if(!this.check("RPAREN")){
+          for(;;){ args.push(this.expression()); if(this.check("COMMA")) this.advance(); else break; }
+        }
+        this.expect("RPAREN");
+        out={kind:"Call",name:t.value,args:args,line:line};
+      } else out={kind:"Var",name:t.value,line:line};
+    }
+    else if(t.type==="LPAREN"){ this.advance(); out=this.expression(); this.expect("RPAREN"); }
+    else throw this.err("unexpected token "+t.type);
+    this.leave(); return out;
+  };
+
+  function parse(toks){
+    var p=new Parser(toks), stmts=[];
+    while(!p.check("EOF")) stmts.push(p.statement());
+    return {stmts:stmts};
+  }
+
+  // ---------- errors ----------
+  function CompileError(message){this.message=message;}
+  CompileError.prototype.toString=function(){return this.message;};
+
+  // ---------- codegen.rs, ported ----------
+  function FnScope(inFunction){this.blocks=[{}];this.nextSlot=0;this.inFunction=inFunction;}
+  FnScope.prototype.pushBlock=function(){this.blocks.push({});};
+  FnScope.prototype.popBlock=function(){this.blocks.pop();};
+  FnScope.prototype.declare=function(name){ var slot=this.nextSlot++; this.blocks[this.blocks.length-1][name]=slot; return slot; };
+  FnScope.prototype.resolve=function(name){
+    for(var i=this.blocks.length-1;i>=0;i--){ if(Object.prototype.hasOwnProperty.call(this.blocks[i],name)) return this.blocks[i][name]; }
+    return undefined;
+  };
+
+  function compile(program){
+    var code=[], funcs=[], sigs={}, fnDefs=[];
+    program.stmts.forEach(function(s){
+      if(s.kind==="FnDef"){
+        if(Object.prototype.hasOwnProperty.call(sigs,s.name)) throw new CompileError("compile error: function '"+s.name+"' is already defined");
+        sigs[s.name]={index:fnDefs.length,arity:s.params.length};
+        fnDefs.push(s);
+      }
+    });
+    funcs = fnDefs.map(function(f){ return {name:f.name,arity:f.params.length,numLocals:0,start:0}; });
+
+    function emitPlaceholder(){ code.push({op:"JUMP_IF_FALSE",a:-1}); return code.length-1; }
+    function patch(at,instr){ code[at]=instr; }
+
+    function genExpr(e, scope){
+      switch(e.kind){
+        case "Int": code.push({op:"PUSH_INT",n:e.value}); return;
+        case "Bool": code.push({op:"PUSH_BOOL",b:e.value}); return;
+        case "Str": code.push({op:"PUSH_STR",s:e.value}); return;
+        case "Var": {
+          var slot=scope.resolve(e.name);
+          if(slot===undefined) throw new CompileError("compile error at line "+e.line+": undefined variable '"+e.name+"'");
+          code.push({op:"LOAD",slot:slot}); return;
+        }
+        case "Unary": {
+          genExpr(e.e, scope);
+          code.push({op: e.op==="Neg" ? "NEG" : "NOT"}); return;
+        }
+        case "Binary": {
+          genExpr(e.l, scope); genExpr(e.r, scope);
+          var map={Add:"ADD",Sub:"SUB",Mul:"MUL",Div:"DIV",Mod:"MOD",Eq:"EQ",NotEq:"NEQ",Lt:"LT",Gt:"GT",LtEq:"LE",GtEq:"GE",And:"AND",Or:"OR"};
+          code.push({op:map[e.op]}); return;
+        }
+        case "Call": {
+          var sig=sigs[e.name];
+          if(!sig) throw new CompileError("compile error at line "+e.line+": undefined function '"+e.name+"'");
+          if(sig.arity!==e.args.length) throw new CompileError("compile error at line "+e.line+": function '"+e.name+"' expects "+sig.arity+" argument(s), got "+e.args.length);
+          e.args.forEach(function(a){ genExpr(a, scope); });
+          code.push({op:"CALL",idx:sig.index,argc:e.args.length}); return;
+        }
+      }
+      throw new CompileError("compile error: unknown expression kind "+e.kind);
+    }
+
+    function genStmt(s, scope){
+      switch(s.kind){
+        case "Let": {
+          genExpr(s.expr, scope);
+          var slot=scope.declare(s.name);
+          code.push({op:"STORE",slot:slot}); return;
+        }
+        case "Assign": {
+          var aslot=scope.resolve(s.name);
+          if(aslot===undefined) throw new CompileError("compile error at line "+s.line+": undefined variable '"+s.name+"'");
+          genExpr(s.expr, scope);
+          code.push({op:"STORE",slot:aslot}); return;
+        }
+        case "ExprStmt": { genExpr(s.expr, scope); code.push({op:"POP"}); return; }
+        case "Print": { genExpr(s.expr, scope); code.push({op:"PRINT"}); return; }
+        case "If": {
+          genExpr(s.cond, scope);
+          var jf=emitPlaceholder();
+          scope.pushBlock();
+          s.thenBody.forEach(function(st){ genStmt(st, scope); });
+          scope.popBlock();
+          if(s.elseBody){
+            var jend=emitPlaceholder();
+            var elseStart=code.length;
+            patch(jf,{op:"JUMP_IF_FALSE",a:elseStart});
+            scope.pushBlock();
+            s.elseBody.forEach(function(st){ genStmt(st, scope); });
+            scope.popBlock();
+            var end=code.length;
+            patch(jend,{op:"JUMP",a:end});
+          } else {
+            var end2=code.length;
+            patch(jf,{op:"JUMP_IF_FALSE",a:end2});
+          }
+          return;
+        }
+        case "While": {
+          var loopStart=code.length;
+          genExpr(s.cond, scope);
+          var jf2=emitPlaceholder();
+          scope.pushBlock();
+          s.body.forEach(function(st){ genStmt(st, scope); });
+          scope.popBlock();
+          code.push({op:"JUMP",a:loopStart});
+          var end3=code.length;
+          patch(jf2,{op:"JUMP_IF_FALSE",a:end3});
+          return;
+        }
+        case "Return": {
+          if(!scope.inFunction) throw new CompileError("compile error: 'return' used outside of a function");
+          if(s.expr) genExpr(s.expr, scope); else code.push({op:"PUSH_INT",n:0});
+          code.push({op:"RET"}); return;
+        }
+        case "FnDef": return;
+      }
+      throw new CompileError("compile error: unknown statement kind "+s.kind);
+    }
+
+    var mainScope=new FnScope(false);
+    program.stmts.forEach(function(s){ if(s.kind!=="FnDef") genStmt(s, mainScope); });
+    var mainLocals=mainScope.nextSlot;
+    code.push({op:"HALT"});
+
+    fnDefs.forEach(function(f){
+      var start=code.length;
+      var scope=new FnScope(true);
+      f.params.forEach(function(p){ scope.declare(p); });
+      f.body.forEach(function(st){ genStmt(st, scope); });
+      code.push({op:"PUSH_INT",n:0});
+      code.push({op:"RET"});
+      var idx=sigs[f.name].index;
+      funcs[idx].start=start;
+      funcs[idx].numLocals=scope.nextSlot;
+    });
+
+    return {code:code, funcs:funcs, mainLocals:mainLocals};
+  }
+
+  function disasm(chunk){
+    var lines=[];
+    lines.push("MAIN_LOCALS "+chunk.mainLocals);
+    lines.push("FUNCS "+chunk.funcs.length);
+    chunk.funcs.forEach(function(f){ lines.push("FUNC "+f.name+" "+f.arity+" "+f.numLocals+" "+f.start); });
+    lines.push("CODE "+chunk.code.length);
+    chunk.code.forEach(function(instr,i){ lines.push(String(i).padStart(5," ")+": "+fmtInstr(instr)); });
+    return lines.join("\n");
+  }
+
+  function fmtInstr(instr){
+    switch(instr.op){
+      case "PUSH_INT": return "PUSH_INT "+instr.n;
+      case "PUSH_BOOL": return "PUSH_BOOL "+instr.b;
+      case "PUSH_STR": return "PUSH_STR "+JSON.stringify(instr.s);
+      case "LOAD": return "LOAD "+instr.slot;
+      case "STORE": return "STORE "+instr.slot;
+      case "JUMP": return "JUMP "+instr.a;
+      case "JUMP_IF_FALSE": return "JUMP_IF_FALSE "+instr.a;
+      case "CALL": return "CALL "+instr.idx+" "+instr.argc;
+      default: return instr.op;
+    }
+  }
+
+  // ---------- vm.rs, ported ----------
+  function RuntimeError(message){this.message=message;}
+  RuntimeError.prototype.toString=function(){return this.message;};
+
+  function typeName(v){ return typeof v==="boolean" ? "bool" : (typeof v==="number" ? "int" : "string"); }
+
+  function Vm(chunk){
+    this.chunk=chunk;
+    this.stack=[];
+    this.frames=[{returnAddr:chunk.code.length,locals:new Array(chunk.mainLocals).fill(0)}];
+    this.ip=0;
+    this.output=[];
+  }
+  Vm.prototype.pop=function(){ if(this.stack.length===0) throw new RuntimeError("runtime error: stack underflow"); return this.stack.pop(); };
+  Vm.prototype.popInt=function(){ var v=this.pop(); if(typeof v!=="number") throw new RuntimeError("runtime error: type error: expected int, found "+typeName(v)); return v; };
+  Vm.prototype.popBool=function(){ var v=this.pop(); if(typeof v!=="boolean") throw new RuntimeError("runtime error: type error: expected bool, found "+typeName(v)); return v; };
+  Vm.prototype.frame=function(){ return this.frames[this.frames.length-1]; };
+
+  Vm.prototype.run=function(){
+    for(;;){
+      if(this.ip>=this.chunk.code.length) throw new RuntimeError("runtime error: jump target "+this.ip+" out of range");
+      var instr=this.chunk.code[this.ip]; this.ip++;
+      switch(instr.op){
+        case "PUSH_INT": this.stack.push(instr.n); break;
+        case "PUSH_BOOL": this.stack.push(instr.b); break;
+        case "PUSH_STR": this.stack.push(instr.s); break;
+        case "POP": this.pop(); break;
+        case "ADD": {
+          var b=this.pop(), a=this.pop();
+          if(typeof a==="number" && typeof b==="number") this.stack.push(a+b);
+          else if(typeof a==="string" && typeof b==="string") this.stack.push(a+b);
+          else throw new RuntimeError("runtime error: type error: cannot add "+typeName(a)+" and "+typeName(b));
+          break;
+        }
+        case "SUB": { var b2=this.popInt(), a2=this.popInt(); this.stack.push(a2-b2); break; }
+        case "MUL": { var b3=this.popInt(), a3=this.popInt(); this.stack.push(a3*b3); break; }
+        case "DIV": { var b4=this.popInt(), a4=this.popInt(); if(b4===0) throw new RuntimeError("runtime error: division by zero"); this.stack.push(Math.trunc(a4/b4)); break; }
+        case "MOD": { var b5=this.popInt(), a5=this.popInt(); if(b5===0) throw new RuntimeError("runtime error: division by zero"); this.stack.push(a5%b5); break; }
+        case "NEG": { this.stack.push(-this.popInt()); break; }
+        case "NOT": { this.stack.push(!this.popBool()); break; }
+        case "AND": { var b6=this.popBool(), a6=this.popBool(); this.stack.push(a6&&b6); break; }
+        case "OR": { var b7=this.popBool(), a7=this.popBool(); this.stack.push(a7||b7); break; }
+        case "EQ": { var b8=this.pop(), a8=this.pop(); this.stack.push(a8===b8); break; }
+        case "NEQ": { var b9=this.pop(), a9=this.pop(); this.stack.push(a9!==b9); break; }
+        case "LT": { var b10=this.popInt(), a10=this.popInt(); this.stack.push(a10<b10); break; }
+        case "GT": { var b11=this.popInt(), a11=this.popInt(); this.stack.push(a11>b11); break; }
+        case "LE": { var b12=this.popInt(), a12=this.popInt(); this.stack.push(a12<=b12); break; }
+        case "GE": { var b13=this.popInt(), a13=this.popInt(); this.stack.push(a13>=b13); break; }
+        case "LOAD": {
+          var f=this.frame();
+          if(instr.slot>=f.locals.length) throw new RuntimeError("runtime error: type error: no local at slot "+instr.slot);
+          this.stack.push(f.locals[instr.slot]); break;
+        }
+        case "STORE": {
+          var v=this.pop(), fr=this.frame();
+          while(instr.slot>=fr.locals.length) fr.locals.push(0);
+          fr.locals[instr.slot]=v; break;
+        }
+        case "JUMP": this.ip=instr.a; break;
+        case "JUMP_IF_FALSE": { if(!this.popBool()) this.ip=instr.a; break; }
+        case "CALL": {
+          var meta=this.chunk.funcs[instr.idx];
+          if(!meta) throw new RuntimeError("runtime error: call to unknown function index "+instr.idx);
+          var args=[];
+          for(var k=0;k<instr.argc;k++) args.unshift(this.pop());
+          var locals=new Array(meta.numLocals).fill(0);
+          for(var m=0;m<args.length;m++) locals[m]=args[m];
+          this.frames.push({returnAddr:this.ip,locals:locals});
+          this.ip=meta.start; break;
+        }
+        case "RET": {
+          var popped=this.frames.pop();
+          if(!popped) throw new RuntimeError("runtime error: stack underflow");
+          this.ip=popped.returnAddr; break;
+        }
+        case "PRINT": { this.output.push(String(this.pop())); break; }
+        case "HALT": return;
+        default: throw new RuntimeError("runtime error: unknown instruction "+instr.op);
+      }
+    }
+  };
+
+  // ---------- wire the demo up ----------
+  var DEFAULT_SRC = [
+    "fn fact(n) {",
+    "    if (n <= 1) {",
+    "        return 1;",
+    "    } else {",
+    "        return n * fact(n - 1);",
+    "    }",
+    "}",
+    "",
+    "print(fact(5));",
+    ""
+  ].join("\n");
+
+  var srcBox=document.getElementById('src');
+  var outPane=document.getElementById('outputPane');
+  var bcPane=document.getElementById('bytecodePane');
+  var status=document.getElementById('status');
+  var runBtn=document.getElementById('runBtn');
+
+  function compileAndRun(){
+    var src=srcBox.value;
+    outPane.classList.remove('err');
+    bcPane.classList.remove('err');
+    try {
+      var toks=lex(src);
+      var program=parse(toks);
+      var chunk=compile(program);
+      bcPane.textContent=disasm(chunk);
+      var machine=new Vm(chunk);
+      try {
+        machine.run();
+        outPane.textContent = machine.output.length ? machine.output.join("\n") : "(no output)";
+        status.textContent="ok, halted cleanly";
+      } catch (rerr) {
+        outPane.classList.add('err');
+        var partial = machine.output.length ? machine.output.join("\n")+"\n" : "";
+        outPane.textContent = partial + rerr.toString();
+        status.textContent="runtime error";
+      }
+    } catch (cerr) {
+      bcPane.textContent="(compilation failed, no bytecode emitted)";
+      outPane.classList.add('err');
+      outPane.textContent = cerr.toString();
+      status.textContent="compile error";
+    }
+  }
+
+  srcBox.value = DEFAULT_SRC;
+  runBtn.addEventListener('click', compileAndRun);
+  compileAndRun();
+})();
+</script>
 </body>
 </html>

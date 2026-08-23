@@ -1,0 +1,20 @@
+[package]
+name = "alchemist"
+version = "0.1.0"
+edition = "2021"
+description = "A from-scratch compiler in Rust that lowers a small language to bytecode and runs it on a bundled stack VM."
+authors = ["Pavan Nallamothu"]
+
+[lib]
+name = "alchemist"
+path = "src/lib.rs"
+
+[[bin]]
+name = "alchemist"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+
+[profile.release]
+opt-level = 3
