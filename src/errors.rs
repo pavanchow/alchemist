@@ -46,6 +46,8 @@ pub enum RuntimeError {
     TypeError(String),
     UnknownFunction(usize),
     BadJumpTarget(usize),
+    StepLimitExceeded(u64),
+    CallDepthExceeded(usize),
 }
 
 impl fmt::Display for RuntimeError {
@@ -59,6 +61,12 @@ impl fmt::Display for RuntimeError {
             }
             RuntimeError::BadJumpTarget(a) => {
                 write!(f, "runtime error: jump target {} out of range", a)
+            }
+            RuntimeError::StepLimitExceeded(n) => {
+                write!(f, "runtime error: execution exceeded the step limit of {} instructions", n)
+            }
+            RuntimeError::CallDepthExceeded(d) => {
+                write!(f, "runtime error: call stack exceeded the depth limit of {}", d)
             }
         }
     }

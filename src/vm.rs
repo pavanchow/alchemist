@@ -44,6 +44,13 @@ pub struct Vm<'a> {
 
 type VResult<T> = Result<T, RuntimeError>;
 
+/// Instruction budget for a single run. A script that loops forever hits this
+/// and stops with an error instead of pinning the thread.
+const MAX_STEPS: u64 = 10_000_000;
+/// Call-frame depth limit. Unbounded recursion hits this and errors instead of
+/// growing the heap until the process runs out of memory.
+const MAX_CALL_DEPTH: usize = 1024;
+
 impl<'a> Vm<'a> {
     pub fn new(chunk: &'a Chunk) -> Self {
         let main_frame = Frame { return_addr: chunk.code.len(), locals: vec![Value::Int(0); chunk.main_locals] };
@@ -73,7 +80,12 @@ impl<'a> Vm<'a> {
     }
 
     pub fn run(&mut self) -> VResult<()> {
+        let mut steps: u64 = 0;
         loop {
+            steps += 1;
+            if steps > MAX_STEPS {
+                return Err(RuntimeError::StepLimitExceeded(MAX_STEPS));
+            }
             if self.ip >= self.chunk.code.len() {
                 return Err(RuntimeError::BadJumpTarget(self.ip));
             }
@@ -204,6 +216,9 @@ impl<'a> Vm<'a> {
                     }
                 }
                 Instr::Call(func_idx, argc) => {
+                    if self.frames.len() >= MAX_CALL_DEPTH {
+                        return Err(RuntimeError::CallDepthExceeded(MAX_CALL_DEPTH));
+                    }
                     let meta = self
                         .chunk
                         .funcs

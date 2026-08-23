@@ -120,6 +120,30 @@ fn division_by_zero_is_clean_runtime_error() {
 }
 
 #[test]
+fn infinite_loop_hits_the_step_limit() {
+    // i only ever grows, so this loop never terminates on its own.
+    let src = "let i = 0; while (i >= 0) { i = i + 1; }";
+    let chunk = compile_source(src).expect("should compile fine");
+    let mut machine = Vm::new(&chunk);
+    let err = machine.run().expect_err("an infinite loop must be stopped");
+    assert!(err.to_string().contains("step limit"), "unexpected message: {}", err);
+}
+
+#[test]
+fn unbounded_recursion_hits_the_call_depth_limit() {
+    let src = r#"
+        fn f() {
+            return f();
+        }
+        print(f());
+    "#;
+    let chunk = compile_source(src).expect("should compile fine");
+    let mut machine = Vm::new(&chunk);
+    let err = machine.run().expect_err("unbounded recursion must be stopped");
+    assert!(err.to_string().contains("call stack"), "unexpected message: {}", err);
+}
+
+#[test]
 fn deeply_nested_parens_is_parse_error_not_crash() {
     let mut src = String::from("print(");
     for _ in 0..5000 {
