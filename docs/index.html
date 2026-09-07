@@ -7,6 +7,7 @@
 <meta name="description" content="Alchemist is a compiler in Rust that lowers a small language through a lexer, parser, and code generator into stack bytecode, then runs it on a bundled virtual machine. Try the real pipeline live in your browser.">
 <meta name="author" content="Pavan Nallamothu (pavanchow)">
 <link rel="canonical" href="https://pavanchow.github.io/alchemist/">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Alchemist: a compiler in Rust with a bundled bytecode VM">
@@ -96,6 +97,16 @@
 
   footer{padding:64px 0;border-top:1px solid var(--line);text-align:center;color:var(--muted)}
   footer .name{color:var(--ink);font-weight:600}
+  details.howto{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:0 22px}
+  details.howto summary{cursor:pointer;list-style:none;padding:18px 0;font-weight:650;font-size:16px;display:flex;align-items:center;gap:10px}
+  details.howto summary::-webkit-details-marker{display:none}
+  details.howto summary::before{content:"";width:8px;height:8px;border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:rotate(-45deg);transition:transform .2s}
+  details.howto[open] summary::before{transform:rotate(45deg)}
+  details.howto .howtobody{padding:0 0 20px;color:var(--muted);font-size:15px}
+  details.howto .howtobody p{margin-bottom:10px}
+  details.howto .howtobody ul{margin:0 0 0 20px}
+  details.howto .howtobody li{margin:6px 0}
+  details.howto code{font-family:var(--mono);font-size:13px;background:var(--accent-soft);color:var(--accent);padding:1px 5px;border-radius:5px}
 </style>
 <link rel="author" href="https://github.com/pavanchow">
 <script type="application/ld+json">
@@ -112,6 +123,7 @@
   </div></nav>
 
   <div id="demo" class="hero">
+    <img src="logo.svg" alt="Alchemist logo" width="76" height="76" style="display:block;margin:0 auto 6px">
     <p class="eyebrow">Rust · from scratch · no parser generator</p>
     <h1>Source becomes instructions,<br>then the instructions run.</h1>
     <p class="sub">Alchemist is a compiler in Rust for a small language: a hand-written lexer, a recursive-descent parser, a code generator that lowers the AST to stack bytecode, and a bundled virtual machine that executes it. This is the real pipeline, ported to JavaScript, running below.</p>
@@ -139,6 +151,20 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="stage" style="margin-top:22px">
+    <details class="howto">
+      <summary>How to use this playground</summary>
+      <div class="howtobody">
+        <p>Alchemist is a compiler you can watch work: edit the program in the box, press <b>Compile and run</b>, and the panes below show its output and the stack bytecode it was lowered to.</p>
+        <ul>
+          <li>Write a small program using <code>let</code>, <code>if</code>/<code>else</code>, <code>while</code>, functions, and <code>print</code>.</li>
+          <li>Press <b>Compile and run</b> to lex, parse, generate bytecode, and execute it.</li>
+          <li>Read the <b>Bytecode disassembly</b> pane to see the exact instructions the VM runs.</li>
+        </ul>
+      </div>
+    </details>
   </div>
 
   <section id="how">

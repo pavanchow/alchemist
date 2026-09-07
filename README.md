@@ -1,3 +1,5 @@
+<img src="docs/logo.svg" alt="Alchemist logo" width="96">
+
 # Alchemist: a compiler in Rust with a bundled bytecode VM
 
 Alchemist is a from-scratch compiler pipeline for a small language. It does not stop at an interpreter. Source text goes through a hand-written lexer, a recursive-descent parser, and a code generator that lowers the AST into a compact stack bytecode, then a small virtual machine executes that bytecode. You can watch source become instructions, and then watch the instructions run.

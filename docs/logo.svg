@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Alchemist logo">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e8a24f"/>
+      <stop offset="1" stop-color="#b45309"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="120" height="120" rx="28" fill="url(#g)"/>
+  <g fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M52 33 L52 55 L31 99 A8 8 0 0 0 38 111 L90 111 A8 8 0 0 0 97 99 L76 55 L76 33"/>
+    <path d="M46 33 L82 33"/>
+  </g>
+  <g fill="#fff">
+    <circle cx="64" cy="92" r="5"/>
+    <circle cx="55" cy="101" r="3.4"/>
+    <circle cx="72" cy="102" r="3"/>
+    <path d="M93 24 L96 33 L105 36 L96 39 L93 48 L90 39 L81 36 L90 33 Z"/>
+  </g>
+</svg>
