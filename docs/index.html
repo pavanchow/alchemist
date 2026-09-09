@@ -3,33 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alchemist: a compiler in Rust with a bundled bytecode VM</title>
-<meta name="description" content="Alchemist is a compiler in Rust that lowers a small language through a lexer, parser, and code generator into stack bytecode, then runs it on a bundled virtual machine. Try the real pipeline live in your browser.">
-<meta name="author" content="Pavan Nallamothu (pavanchow)">
-<meta name="keywords" content="compiler, Rust, bytecode, stack VM, virtual machine, lexer, recursive descent parser, code generation, AST, interpreter, disassembler, programming language, Pavan Nallamothu, pavanchow">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<title>Alchemist: compiler and bytecode VM in Rust | Pavan Nallamothu</title>
+<meta name="description" content="Alchemist is a compiler in Rust that lexes, parses, and lowers a small language to stack bytecode, then runs it on a bundled VM. Try it live, by Pavan Nallamothu.">
+<meta name="author" content="Pavan Nallamothu">
+<meta name="keywords" content="alchemist, alchemist rust, compiler in rust, bytecode compiler, stack VM, virtual machine, recursive descent parser, hand-written lexer, code generation, bytecode disassembler, write a compiler from scratch, programming language implementation, interpreter, teaching compiler, Pavan Nallamothu, pavanchow">
 <link rel="canonical" href="https://pavanchow.github.io/alchemist/">
+<link rel="author" href="https://github.com/pavanchow">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="Alchemist: a compiler in Rust with a bundled bytecode VM">
-<meta property="og:description" content="A real compiler pipeline you can read: lexer, parser, AST, a code generator that emits stack bytecode, and a small VM that executes it. Try it live.">
+<meta property="og:site_name" content="Pavan Nallamothu">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="Alchemist: compiler and bytecode VM in Rust | Pavan Nallamothu">
+<meta property="og:description" content="A compiler in Rust that lexes, parses, and lowers a small language to stack bytecode, then runs it on a bundled VM. Try the real pipeline live in your browser.">
 <meta property="og:url" content="https://pavanchow.github.io/alchemist/">
-<meta property="og:site_name" content="Alchemist">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://pavanchow.github.io/alchemist/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Alchemist by Pavan Nallamothu">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Alchemist: compiler and bytecode VM in Rust | Pavan Nallamothu">
+<meta name="twitter:description" content="A compiler in Rust that lowers a small language to stack bytecode and runs it on a bundled VM. Try it live.">
+<meta name="twitter:image" content="https://pavanchow.github.io/alchemist/og-image.png">
+<meta name="twitter:creator" content="@pavanchow">
+<meta name="twitter:site" content="@pavanchow">
 
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Alchemist",
-  "description": "Alchemist is a compiler in Rust that lowers a small language through a lexer, parser, and code generator into stack bytecode, then runs it on a bundled virtual machine.",
-  "applicationCategory": "DeveloperApplication",
-  "softwareVersion": "0.1.0",
-  "operatingSystem": "Cross-platform",
-  "author": { "@type": "Person", "name": "Pavan Nallamothu" },
-  "url": "https://pavanchow.github.io/alchemist/",
-  "codeRepository": "https://github.com/pavanchow/alchemist",
-  "programmingLanguage": "Rust"
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://pavanchow.github.io/alchemist/#software",
+      "name": "Alchemist",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Cross-platform",
+      "description": "Alchemist is a compiler in Rust that lowers a small language through a hand-written lexer, a recursive-descent parser, and a code generator into stack bytecode, then executes that bytecode on a bundled virtual machine.",
+      "url": "https://pavanchow.github.io/alchemist/",
+      "image": "https://pavanchow.github.io/alchemist/og-image.png",
+      "softwareVersion": "0.1.0",
+      "programmingLanguage": "Rust",
+      "codeRepository": "https://github.com/pavanchow/alchemist",
+      "datePublished": "2026-08-21",
+      "author": { "@id": "https://github.com/pavanchow#person" },
+      "publisher": { "@id": "https://github.com/pavanchow#person" },
+      "keywords": "compiler in rust, bytecode compiler, stack VM, recursive descent parser, code generation, bytecode disassembler, programming language implementation",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "featureList": [
+        "Hand-written lexer with line and column tracking",
+        "Recursive-descent parser with precedence climbing and bounded nesting",
+        "Code generator that lowers the AST to compact stack bytecode",
+        "Stack virtual machine with call frames and recursion",
+        "Bytecode disassembler for reading the emitted instructions",
+        "Typed compile errors and clean runtime error handling"
+      ]
+    },
+    {
+      "@type": "Person",
+      "@id": "https://github.com/pavanchow#person",
+      "name": "Pavan Nallamothu",
+      "alternateName": "pavanchow",
+      "url": "https://github.com/pavanchow",
+      "jobTitle": "Software Engineer and Security Researcher",
+      "knowsAbout": ["Rust", "compilers", "bytecode", "virtual machines", "parsers", "programming language design"],
+      "sameAs": ["https://github.com/pavanchow", "https://hackerone.com/pavanchow"]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://pavanchow.github.io/alchemist/#website",
+      "name": "Alchemist by Pavan Nallamothu",
+      "url": "https://pavanchow.github.io/alchemist/",
+      "author": { "@id": "https://github.com/pavanchow#person" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Pavan Nallamothu", "item": "https://github.com/pavanchow" },
+        { "@type": "ListItem", "position": 2, "name": "Alchemist", "item": "https://pavanchow.github.io/alchemist/" }
+      ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://pavanchow.github.io/alchemist/#webpage",
+      "url": "https://pavanchow.github.io/alchemist/",
+      "name": "Alchemist: compiler and bytecode VM in Rust | Pavan Nallamothu",
+      "isPartOf": { "@id": "https://pavanchow.github.io/alchemist/#website" },
+      "about": { "@id": "https://pavanchow.github.io/alchemist/#software" },
+      "author": { "@id": "https://github.com/pavanchow#person" },
+      "inLanguage": "en"
+    }
+  ]
 }
 </script>
 
@@ -134,10 +198,6 @@
   details.howto .howtobody li{margin:6px 0}
   details.howto code{font-family:var(--mono);font-size:13px;background:var(--accent-soft);color:var(--accent);padding:1px 5px;border-radius:5px}
 </style>
-<link rel="author" href="https://github.com/pavanchow">
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Person","name":"Pavan Nallamothu","alternateName":"pavanchow","url":"https://github.com/pavanchow","sameAs":["https://github.com/pavanchow","https://hackerone.com/pavanchow"]}
-</script>
 </head>
 <body>
   <nav><div class="row">
@@ -285,7 +345,18 @@ alchemist disasm factorial.abc</pre>
   <footer>
     <p>A compiler pipeline you can read end to end.</p>
     <p style="margin-top:12px"><a href="https://github.com/pavanchow/alchemist">github.com/pavanchow/alchemist</a></p>
-    <p style="margin-top:12px">By <span class="name">Pavan Nallamothu</span>.</p>
+    <nav class="moretools" aria-label="More open-source tools by Pavan Nallamothu" style="margin:28px auto 0;max-width:760px">
+      <p style="font-weight:600;color:var(--ink);margin-bottom:10px">More open-source tools by Pavan Nallamothu</p>
+      <p style="font-size:14.5px;line-height:1.9">
+        <a href="https://pavanchow.github.io/anvil/">Anvil, a compiler backend with a graph coloring register allocator</a> &middot;
+        <a href="https://pavanchow.github.io/atelier/">Atelier, a code-intelligence engine with go to definition and rename</a> &middot;
+        <a href="https://pavanchow.github.io/unweave/">Unweave, an EVM bytecode disassembler in Rust</a> &middot;
+        <a href="https://pavanchow.github.io/archipelago/">Archipelago, a dependency-free distributed file system</a> &middot;
+        <a href="https://pavanchow.github.io/aurora/">Aurora, an amnesic RAM-only aarch64 kernel</a> &middot;
+        <a href="https://github.com/pavanchow">All projects on GitHub (github.com/pavanchow)</a>
+      </p>
+    </nav>
+    <p style="margin-top:24px">By <span class="name">Pavan Nallamothu</span>.</p>
   </footer>
 
 <script>
