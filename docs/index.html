@@ -44,6 +44,18 @@
   html{scroll-behavior:smooth}
   body{background:#fff;color:var(--ink);
     font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  @media(prefers-color-scheme:dark){
+    :root{
+      --accent:#e0a45f;--accent-soft:#2a1c0d;
+      --ink:#f2ece1;--muted:#a59d8f;--faint:#7d766a;
+      --line:#2a2620;--panel:#17140f;--panel2:#1c1810;
+    }
+    body{background:#000}
+    nav{background:rgba(0,0,0,.72)}
+    .card{background:linear-gradient(180deg,#1a1610,#141009)}
+    .btn.p{color:#191510}
+    .demo button{color:#191510}
+  }
   .wrap{max-width:1040px;margin:0 auto;padding:0 28px}
   a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 
