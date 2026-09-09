@@ -1,6 +1,7 @@
 [package]
 name = "alchemist"
 version = "0.1.0"
+license = "MIT"
 edition = "2021"
 description = "A from-scratch compiler in Rust that lowers a small language to bytecode and runs it on a bundled stack VM."
 authors = ["Pavan Nallamothu"]
