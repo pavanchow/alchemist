@@ -6,6 +6,8 @@ Alchemist is a from-scratch compiler and bytecode VM in Rust for a small program
 
 **[Live demo](https://pavanchow.github.io/alchemist/)** · MIT licensed · pure Rust
 
+Built from scratch by [Pavan Nallamothu](https://pavanchow.github.io/) ([LinkedIn](https://www.linkedin.com/in/pavanchow/), [GitHub](https://github.com/pavanchow)).
+
 ## The language
 
 Alchemist compiles a small but real language:
